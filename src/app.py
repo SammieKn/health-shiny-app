@@ -3,7 +3,7 @@ import plotly.express as px
 from faicons import icon_svg as icon
 
 from shiny.express import input, render, ui
-from shinywidgets import render_widget, render_plotly
+from shinywidgets import render_plotly
 
 PATH_TO_EXPORT = "data/hevy/20250426_HevyExport.csv"
 
@@ -41,6 +41,7 @@ exercise_titles = df_processed.value_counts("exercise_title").index.tolist()
 
 ui.page_opts(
     title="Personal health data",
+    fill_screen=True,
 )
 with ui.sidebar():
     ui.input_select("exercise", "Exercise", exercise_titles)
@@ -48,12 +49,11 @@ with ui.sidebar():
     ui.input_selectize(
         "type_metric_for_exercise",
         "Select a metric",
-        {"one_rep_max" : "One Rep Max", "max_weight" : "Max Weight"},
+        {"one_rep_max": "One Rep Max", "max_weight": "Max Weight"},
         selected="max_weight",
     )
-    ui.input_dark_mode()  # To toggle dark mode on/off
 
-with ui.layout_columns():
+with ui.layout_columns(fill=True):
     with ui.value_box(showcase=icon("dumbbell")):
         "Max Weight lifted"
         @render.ui
@@ -70,7 +70,7 @@ with ui.layout_columns():
             date_range = input.date()
             filters = (df_processed["exercise_title"] == exercise) & (df_processed["date"] >= date_range[0]) & (df_processed["date"] <= date_range[1])
             return f"{df_processed.loc[filters, 'one_rep_max'].max():.1f} kg"
-    
+
     with ui.value_box(showcase=icon("weight-hanging")):
         "Total Weight Lifted"
         @render.ui
@@ -82,8 +82,8 @@ with ui.layout_columns():
             weight_lifted = df_exercise["weight_kg"] * df_exercise["reps"]
             total_weight = weight_lifted.sum()
             return f"{total_weight} kg"
-        
-with ui.card(full_screen=True):
+
+with ui.card(full_screen=True, class_="my-3"):
     with ui.layout_columns(col_widths=(8, 4)):
         @render_plotly
         def line_plot():
@@ -105,7 +105,7 @@ with ui.card(full_screen=True):
                 title=f"Exercise: {exercise}",
                 labels={"x": "Date", "y": metric},
                 )
-        
+
         @render_plotly
         def hist():
             exercise = input.exercise()
@@ -115,6 +115,7 @@ with ui.card(full_screen=True):
             return px.histogram(df_hist, x="reps", title=f"Exercise: {exercise}", labels={"x": "Reps"}, color_discrete_sequence=["#636EFA"])
 
 with ui.card(full_screen=True):
+    ui.card_header("Exercise data")
     @render.data_frame
     def data_table():
         exercise = input.exercise()
